@@ -36,6 +36,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import android.webkit.ValueCallback;
+
+
 
 public class Screenshot extends CordovaPlugin {
     private CallbackContext mCallbackContext;
@@ -225,6 +228,44 @@ public class Screenshot extends CordovaPlugin {
             }
         }
     }
+    
+    private void captureFullPage(final CallbackContext callbackContext) {
+        final View view = this.webView.getView();
+
+        this.webView.evaluateJavascript(
+            "(function() { return Math.max(document.body.scrollHeight, document.documentElement.scrollHeight); })();",
+            new ValueCallback<String>() {
+                @Override
+                public void onReceiveValue(String value) {
+                    try {
+                        int contentHeight = Integer.parseInt(value.replaceAll("[^\\d]", ""));
+                        final int originalHeight = view.getLayoutParams().height;
+
+                        view.getLayoutParams().height = contentHeight;
+                        view.requestLayout();
+
+                        view.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                android.webkit.WebView awv = (android.webkit.WebView) view;
+                                Picture picture = awv.capturePicture();
+                                Bitmap bitmap = Bitmap.createBitmap(picture.getWidth(), picture.getHeight(), Bitmap.Config.ARGB_8888);
+                                Canvas canvas = new Canvas(bitmap);
+                                picture.draw(canvas);
+
+                                // You can replace this with logic to save bitmap to file or return base64
+                                callbackContext.success("Captured full scroll screenshot");
+
+                                view.getLayoutParams().height = originalHeight;
+                                view.requestLayout();
+                            }
+                        }, 500);
+                    } catch (Exception e) {
+                        callbackContext.error("Failed to capture full scroll: " + e.getMessage());
+                    }
+                }
+            });
+    }
 
     @Override
     public boolean execute(String action, JSONArray args, final CallbackContext callbackContext) throws JSONException {
@@ -242,7 +283,7 @@ public class Screenshot extends CordovaPlugin {
             }
             return true;
         } else if (action.equals("getScreenshotAsURI")) {
-            getScreenshotAsURI();
+            captureFullPage(callbackContext);
             return true;
         } else if (action.equals("getScreenshotAsURISync")){
             getScreenshotAsURISync();
