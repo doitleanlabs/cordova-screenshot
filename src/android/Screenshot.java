@@ -231,36 +231,44 @@ public class Screenshot extends CordovaPlugin {
     
     private void captureFullPage(final CallbackContext callbackContext) {
         final View view = this.webView.getView();
-        android.webkit.WebView awvOuter = (android.webkit.WebView) this.webView.getView();
+        final android.webkit.WebView awv = (android.webkit.WebView) view;
+        
+        Log.d("FullScreenshot", "WILL CAPTURE FULL SCREEN" + isCrosswalk);
 
-        awvOuter.evaluateJavascript(
-            "(function() { return Math.max(document.body.scrollHeight, document.documentElement.scrollHeight); })();",
-            new ValueCallback<String>() {
-                @Override
-                public void onReceiveValue(String value) {
-                    try {
-                        int contentHeight = Integer.parseInt(value.replaceAll("[^\\d]", ""));
-                        final int originalHeight = view.getLayoutParams().height;
+        cordova.getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.d("FullScreenshot", "WILL CAPTURE FULL SCREEN 1" + isCrosswalk);
+                awv.evaluateJavascript(
+                    "(function() { return Math.max(document.body.scrollHeight, document.documentElement.scrollHeight); })();",
+                    new ValueCallback<String>() {
+                        @Override
+                        public void onReceiveValue(String value) {
+                            Log.d("FullScreenshot", "WILL CAPTURE FULL SCREEN 2" + isCrosswalk);
+                            try {
+                                int contentHeight = Integer.parseInt(value.replaceAll("[^\\d]", ""));
+                                final int originalHeight = view.getLayoutParams().height;
 
-                        view.getLayoutParams().height = contentHeight;
-                        view.requestLayout();
+                                view.getLayoutParams().height = contentHeight;
+                                view.requestLayout();
 
-                        view.postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                android.webkit.WebView awv = (android.webkit.WebView) view;
-
-                                cordova.getActivity().runOnUiThread(new Runnable() {
+                                view.postDelayed(new Runnable() {
                                     @Override
                                     public void run() {
-                                        Picture picture = awv.capturePicture();
-                                        Bitmap bitmap = Bitmap.createBitmap(picture.getWidth(), picture.getHeight(), Bitmap.Config.ARGB_8888);
-                                        Canvas canvas = new Canvas(bitmap);
-                                        picture.draw(canvas);
-
+                                        Log.d("FullScreenshot", "WILL CAPTURE FULL SCREEN 3" + isCrosswalk);
                                         try {
+                                            Picture picture = awv.capturePicture();
+                                            Bitmap bitmap = Bitmap.createBitmap(
+                                                picture.getWidth(),
+                                                picture.getHeight(),
+                                                Bitmap.Config.ARGB_8888
+                                            );
+                                            Canvas canvas = new Canvas(bitmap);
+                                            picture.draw(canvas);
+
+                                            // Encode to base64
                                             ByteArrayOutputStream jpeg_data = new ByteArrayOutputStream();
-                                            int quality = 100; 
+                                            int quality = mQuality != null ? mQuality : 100;
 
                                             if (bitmap.compress(CompressFormat.JPEG, quality, jpeg_data)) {
                                                 byte[] code = jpeg_data.toByteArray();
@@ -270,28 +278,26 @@ public class Screenshot extends CordovaPlugin {
 
                                                 JSONObject jsonRes = new JSONObject();
                                                 jsonRes.put("URI", js_out);
-
                                                 PluginResult result = new PluginResult(PluginResult.Status.OK, jsonRes);
                                                 callbackContext.sendPluginResult(result);
                                             }
-                                        } catch (JSONException e) {
-                                            callbackContext.error(e.getMessage());
-                                        } catch (Exception e) {
-                                            callbackContext.error(e.getMessage());
-                                        }
 
-                                        view.getLayoutParams().height = originalHeight;
-                                        view.requestLayout();
+                                            // Restore view height
+                                            view.getLayoutParams().height = originalHeight;
+                                            view.requestLayout();
+                                        } catch (Exception e) {
+                                            callbackContext.error("Capture failed: " + e.getMessage());
+                                        }
                                     }
-                                });
-                                
+                                }, 500);
+                            } catch (Exception e) {
+                                callbackContext.error("Failed to evaluate scroll height: " + e.getMessage());
                             }
-                        }, 500);
-                    } catch (Exception e) {
-                        callbackContext.error("Failed to capture full scroll: " + e.getMessage());
+                        }
                     }
-                }
-            });
+                );
+            }
+        });
     }
 
     @Override
