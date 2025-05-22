@@ -231,8 +231,9 @@ public class Screenshot extends CordovaPlugin {
     
     private void captureFullPage(final CallbackContext callbackContext) {
         final View view = this.webView.getView();
+        android.webkit.WebView awvOuter = (android.webkit.WebView) this.webView.getView();
 
-        this.webView.evaluateJavascript(
+        awvOuter.evaluateJavascript(
             "(function() { return Math.max(document.body.scrollHeight, document.documentElement.scrollHeight); })();",
             new ValueCallback<String>() {
                 @Override
