@@ -19,6 +19,7 @@ import android.util.Base64;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.util.Log;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
@@ -72,13 +73,23 @@ public class Screenshot extends CordovaPlugin {
         } catch (Exception e) {
         }
 
+        Log.d("FullScreenshot", "isCrosswalk" + isCrosswalk);
+
         if (isCrosswalk) {
             webView.getPluginManager().postMessage("captureXWalkBitmap", this);
         } else {
+            /* 
             View view = webView.getView();//.getRootView();
             view.setDrawingCacheEnabled(true);
             bitmap = Bitmap.createBitmap(view.getDrawingCache());
             view.setDrawingCacheEnabled(false);
+            */
+
+            WebView webView = (WebView) this.webView.getView();
+            Picture picture = webView.capturePicture();
+            bitmap = Bitmap.createBitmap(picture.getWidth(), picture.getHeight(), Bitmap.Config.ARGB_8888);
+            Canvas c = new Canvas(bitmap);
+            picture.draw(c);
         }
 
         return bitmap;
