@@ -233,18 +233,18 @@ public class Screenshot extends CordovaPlugin {
         final View view = this.webView.getView();
         final android.webkit.WebView awv = (android.webkit.WebView) view;
         
-        Log.d("FullScreenshot", "WILL CAPTURE FULL SCREEN" + isCrosswalk);
+        Log.d("FullScreenshot", "WILL CAPTURE FULL SCREEN");
 
         cordova.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                Log.d("FullScreenshot", "WILL CAPTURE FULL SCREEN 1" + isCrosswalk);
+                Log.d("FullScreenshot", "WILL CAPTURE FULL SCREEN 1");
                 awv.evaluateJavascript(
                     "(function() { return Math.max(document.body.scrollHeight, document.documentElement.scrollHeight); })();",
                     new ValueCallback<String>() {
                         @Override
                         public void onReceiveValue(String value) {
-                            Log.d("FullScreenshot", "WILL CAPTURE FULL SCREEN 2" + isCrosswalk);
+                            Log.d("FullScreenshot", "WILL CAPTURE FULL SCREEN 2");
                             try {
                                 int contentHeight = Integer.parseInt(value.replaceAll("[^\\d]", ""));
                                 final int originalHeight = view.getLayoutParams().height;
@@ -255,7 +255,7 @@ public class Screenshot extends CordovaPlugin {
                                 view.postDelayed(new Runnable() {
                                     @Override
                                     public void run() {
-                                        Log.d("FullScreenshot", "WILL CAPTURE FULL SCREEN 3" + isCrosswalk);
+                                        Log.d("FullScreenshot", "WILL CAPTURE FULL SCREEN 3");
                                         try {
                                             Picture picture = awv.capturePicture();
                                             Bitmap bitmap = Bitmap.createBitmap(
