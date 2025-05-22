@@ -249,16 +249,24 @@ public class Screenshot extends CordovaPlugin {
                             @Override
                             public void run() {
                                 android.webkit.WebView awv = (android.webkit.WebView) view;
-                                Picture picture = awv.capturePicture();
-                                Bitmap bitmap = Bitmap.createBitmap(picture.getWidth(), picture.getHeight(), Bitmap.Config.ARGB_8888);
-                                Canvas canvas = new Canvas(bitmap);
-                                picture.draw(canvas);
 
-                                // You can replace this with logic to save bitmap to file or return base64
-                                callbackContext.success("Captured full scroll screenshot");
+                                cordova.getActivity().runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Picture picture = awv.capturePicture();
+                                        Bitmap bitmap = Bitmap.createBitmap(picture.getWidth(), picture.getHeight(), Bitmap.Config.ARGB_8888);
+                                        Canvas canvas = new Canvas(bitmap);
+                                        picture.draw(canvas);
 
-                                view.getLayoutParams().height = originalHeight;
-                                view.requestLayout();
+                                        // You can replace this with logic to save bitmap to file or return base64
+                                        callbackContext.success("Captured full scroll screenshot");
+
+                                        view.getLayoutParams().height = originalHeight;
+                                        view.requestLayout();
+                                    }
+                                });
+
+                                
                             }
                         }, 500);
                     } catch (Exception e) {
