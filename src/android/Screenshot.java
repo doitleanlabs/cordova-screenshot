@@ -85,8 +85,8 @@ public class Screenshot extends CordovaPlugin {
             view.setDrawingCacheEnabled(false);
             */
 
-            WebView webView = (WebView) this.webView.getView();
-            Picture picture = webView.capturePicture();
+            android.webkit.WebView awv = (android.webkit.WebView) this.webView.getView();
+            Picture picture = awv.capturePicture();
             bitmap = Bitmap.createBitmap(picture.getWidth(), picture.getHeight(), Bitmap.Config.ARGB_8888);
             Canvas c = new Canvas(bitmap);
             picture.draw(c);
