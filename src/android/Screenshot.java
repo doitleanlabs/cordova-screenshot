@@ -258,14 +258,32 @@ public class Screenshot extends CordovaPlugin {
                                         Canvas canvas = new Canvas(bitmap);
                                         picture.draw(canvas);
 
-                                        // You can replace this with logic to save bitmap to file or return base64
-                                        callbackContext.success("Captured full scroll screenshot");
+                                        try {
+                                            ByteArrayOutputStream jpeg_data = new ByteArrayOutputStream();
+                                            int quality = 100; 
+
+                                            if (bitmap.compress(CompressFormat.JPEG, quality, jpeg_data)) {
+                                                byte[] code = jpeg_data.toByteArray();
+                                                byte[] output = Base64.encode(code, Base64.NO_WRAP);
+                                                String js_out = new String(output);
+                                                js_out = "data:image/jpeg;base64," + js_out;
+
+                                                JSONObject jsonRes = new JSONObject();
+                                                jsonRes.put("URI", js_out);
+
+                                                PluginResult result = new PluginResult(PluginResult.Status.OK, jsonRes);
+                                                callbackContext.sendPluginResult(result);
+                                            }
+                                        } catch (JSONException e) {
+                                            callbackContext.error(e.getMessage());
+                                        } catch (Exception e) {
+                                            callbackContext.error(e.getMessage());
+                                        }
 
                                         view.getLayoutParams().height = originalHeight;
                                         view.requestLayout();
                                     }
                                 });
-
                                 
                             }
                         }, 500);
